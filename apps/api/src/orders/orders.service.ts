@@ -7,11 +7,48 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 export class OrdersService {
   constructor(private prisma: PrismaService) {}
 
-  findAll() {
-    return this.prisma.order.findMany({
-      include: { supplier: true, forwarder: true, items: true, invoices: true },
-      orderBy: { createdAt: 'desc' },
-    });
+  async findAll(page = 1, limit = 10, search?: string) {
+    const skip = (page - 1) * limit;
+    
+    const where = search
+      ? {
+          OR: [
+            {
+              refNumber: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+            {
+              shipmentName: {
+                contains: search,
+                mode: 'insensitive' as const,
+              },
+            },
+          ],
+        }
+      : {};
+    
+    const [data, total] = await Promise.all([
+      this.prisma.order.findMany({
+        where,
+        skip,
+        take: limit,
+        include: { supplier: true, forwarder: true, items: true, invoices: true },
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.order.count({ where }),
+    ]);
+
+    return {
+      data,
+      meta: {
+        total,
+        page,
+        limit,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string) {

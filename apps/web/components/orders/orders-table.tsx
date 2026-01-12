@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Order } from "@/types/orders";
 import {
   Table,
@@ -20,13 +21,28 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
-/**
- * Orders table
- * Client component for row actions (edit, delete modals)
- * Data is passed from server component
- */
-export function OrdersTable({ orders }: { orders: Order[] }) {
+interface OrdersTableProps {
+  orders: Order[];
+  onUpdate: () => void;
+  onEdit?: (order: Order) => void;
+}
+
+export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const formatDate = (date: string | null) => {
     if (!date) return "—";
     return new Date(date).toLocaleDateString("en-US", {
@@ -42,6 +58,30 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
       style: "currency",
       currency: "USD",
     }).format(total);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    setDeleting(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/orders/${deleteId}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.message || "Failed to delete order");
+      }
+
+      onUpdate();
+      setDeleteId(null);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to delete order");
+    } finally {
+      setDeleting(false);
+    }
   };
 
   if (orders.length === 0) {
@@ -95,16 +135,19 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem>
+                    <DropdownMenuItem disabled>
                       <Eye className="mr-2 h-4 w-4" />
                       View
                     </DropdownMenuItem>
-                    <DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onEdit?.(order)}>
                       <Pencil className="mr-2 h-4 w-4" />
                       Edit
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive">
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={() => setDeleteId(order.id)}
+                    >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Delete
                     </DropdownMenuItem>
@@ -115,6 +158,33 @@ export function OrdersTable({ orders }: { orders: Order[] }) {
           ))}
         </TableBody>
       </Table>
+
+      <AlertDialog open={deleteId !== null} onOpenChange={() => {
+        setDeleteId(null);
+        setError(null);
+      }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete this order and all its items. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          {error && (
+            <p className="text-sm text-destructive">{error}</p>
+          )}
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleting}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
