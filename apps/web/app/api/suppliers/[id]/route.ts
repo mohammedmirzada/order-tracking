@@ -28,9 +28,9 @@ export async function PATCH(
     });
 
     if (!res.ok) {
-      const error = await res.text();
+      const error = await res.json();
       return NextResponse.json(
-        { message: error || "Failed to update supplier" },
+        { message: error.message || "Failed to update supplier" },
         { status: res.status }
       );
     }

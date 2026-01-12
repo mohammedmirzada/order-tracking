@@ -18,7 +18,7 @@ export async function PATCH(
     const { id } = await params;
     const body = await req.json();
 
-    const res = await fetch(`${API_URL}/forwarders/${id}`, {
+    const res = await fetch(`${API_URL}/invoices/${id}`, {
       method: "PATCH",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -30,7 +30,7 @@ export async function PATCH(
     if (!res.ok) {
       const error = await res.json();
       return NextResponse.json(
-        { message: error.message || "Failed to update forwarder" },
+        { message: error.message || "Failed to update invoice" },
         { status: res.status }
       );
     }
@@ -38,7 +38,7 @@ export async function PATCH(
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Failed to update forwarder:", error);
+    console.error("Failed to update invoice:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -60,24 +60,22 @@ export async function DELETE(
   try {
     const { id } = await params;
 
-    const res = await fetch(`${API_URL}/forwarders/${id}`, {
+    const res = await fetch(`${API_URL}/invoices/${id}`, {
       method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
+      headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
       const error = await res.text();
       return NextResponse.json(
-        { message: error || "Failed to delete forwarder" },
+        { message: error || "Failed to delete invoice" },
         { status: res.status }
       );
     }
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error("Failed to delete forwarder:", error);
+    console.error("Failed to delete invoice:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

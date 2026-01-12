@@ -23,14 +23,14 @@ export async function GET(req: NextRequest) {
       ...(search && { search }),
     }).toString();
     
-    const res = await fetch(`${API_URL}/forwarders?${queryString}`, {
+    const res = await fetch(`${API_URL}/invoices?${queryString}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
     if (!res.ok) {
       const error = await res.text();
       return NextResponse.json(
-        { message: error || "Failed to fetch forwarders" },
+        { message: error || "Failed to fetch invoices" },
         { status: res.status }
       );
     }
@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Failed to fetch forwarders:", error);
+    console.error("Failed to fetch invoices:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }
@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
 
-    const res = await fetch(`${API_URL}/forwarders`, {
+    const res = await fetch(`${API_URL}/invoices`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     if (!res.ok) {
       const error = await res.json();
       return NextResponse.json(
-        { message: error.message || "Failed to create forwarder" },
+        { message: error.message || "Failed to create invoice" },
         { status: res.status }
       );
     }
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     const data = await res.json();
     return NextResponse.json(data, { status: 201 });
   } catch (error) {
-    console.error("Failed to create forwarder:", error);
+    console.error("Failed to create invoice:", error);
     return NextResponse.json(
       { message: "Internal server error" },
       { status: 500 }

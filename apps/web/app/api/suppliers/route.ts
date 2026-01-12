@@ -15,8 +15,15 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const page = searchParams.get('page') || '1';
     const limit = searchParams.get('limit') || '10';
+    const search = searchParams.get('search') || '';
     
-    const res = await fetch(`${API_URL}/suppliers?page=${page}&limit=${limit}`, {
+    const queryString = new URLSearchParams({
+      page,
+      limit,
+      ...(search && { search }),
+    }).toString();
+    
+    const res = await fetch(`${API_URL}/suppliers?${queryString}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
 
@@ -60,9 +67,9 @@ export async function POST(req: NextRequest) {
     });
 
     if (!res.ok) {
-      const error = await res.text();
+      const error = await res.json();
       return NextResponse.json(
-        { message: error || "Failed to create supplier" },
+        { message: error.message || "Failed to create supplier" },
         { status: res.status }
       );
     }

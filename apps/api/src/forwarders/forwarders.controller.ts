@@ -12,10 +12,12 @@ export class ForwardersController {
   @Get() findAll(
     @Query('page') page?: string,
     @Query('limit') limit?: string,
+    @Query('search') search?: string,
   ) {
     return this.service.findAll(
       page ? parseInt(page) : undefined,
       limit ? parseInt(limit) : undefined,
+      search,
     );
   }
   @Get(':id') findOne(@Param('id') id: string) { return this.service.findOne(id); }

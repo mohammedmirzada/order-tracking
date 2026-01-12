@@ -7,16 +7,26 @@ import { UpdateForwarderDto } from './dto/update-forwarder.dto';
 export class ForwardersService {
   constructor(private prisma: PrismaService) {}
 
-  async findAll(page = 1, limit = 10) {
+  async findAll(page = 1, limit = 10, search?: string) {
     const skip = (page - 1) * limit;
+    
+    const where = search
+      ? {
+          name: {
+            contains: search,
+            mode: 'insensitive' as const,
+          },
+        }
+      : {};
     
     const [data, total] = await Promise.all([
       this.prisma.forwarder.findMany({
+        where,
         skip,
         take: limit,
         orderBy: { createdAt: 'desc' },
       }),
-      this.prisma.forwarder.count(),
+      this.prisma.forwarder.count({ where }),
     ]);
 
     return {
