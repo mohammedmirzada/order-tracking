@@ -34,7 +34,18 @@ export class OrdersService {
         where,
         skip,
         take: limit,
-        include: { supplier: true, forwarder: true, items: true, invoices: true },
+        include: { 
+          supplier: true, 
+          forwarder: true, 
+          items: true, 
+          invoices: {
+            include: {
+              documents: {
+                orderBy: { createdAt: 'desc' },
+              },
+            },
+          },
+        },
         orderBy: { createdAt: 'desc' },
       }),
       this.prisma.order.count({ where }),
@@ -54,7 +65,16 @@ export class OrdersService {
   async findOne(id: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      include: { supplier: true, forwarder: true, items: true, invoices: true },
+      include: {
+        supplier: true,
+        forwarder: true,
+        items: true,
+        invoices: {
+          include: {
+            documents: { orderBy: { createdAt: 'desc' } },
+          },
+        },
+      },
     });
     if (!order) throw new NotFoundException('Order not found');
     return order;

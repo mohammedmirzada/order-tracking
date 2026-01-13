@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table";
 import { OrderStatusBadge } from "./order-status-badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Pencil, Trash2 } from "lucide-react";
+import { MoreHorizontal, Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -42,6 +42,10 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [commentDialogOpen, setCommentDialogOpen] = useState(false);
+  const [selectedComment, setSelectedComment] = useState<string>("");
+  const [invoiceDialogOpen, setInvoiceDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
   const formatDate = (date: string | null) => {
     if (!date) return "—";
@@ -135,9 +139,22 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
                   <DropdownMenuContent align="end">
                     <DropdownMenuLabel>Actions</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem disabled>
+                    <DropdownMenuItem onClick={() => {
+                      setSelectedComment(order.comments || "No comment");
+                      setCommentDialogOpen(true);
+                    }}>
                       <Eye className="mr-2 h-4 w-4" />
-                      View
+                      View Comment
+                    </DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        setInvoiceDialogOpen(true);
+                      }}
+                      disabled={!order.invoices || order.invoices.length === 0}
+                    >
+                      <FileText className="mr-2 h-4 w-4" />
+                      View Invoice
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => onEdit?.(order)}>
                       <Pencil className="mr-2 h-4 w-4" />
@@ -158,6 +175,81 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
           ))}
         </TableBody>
       </Table>
+
+      {/* Comment Dialog */}
+      <AlertDialog open={commentDialogOpen} onOpenChange={setCommentDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Order Comment</AlertDialogTitle>
+            <AlertDialogDescription className="whitespace-pre-wrap">
+              {selectedComment}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setCommentDialogOpen(false)}>
+              Close
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Invoice Dialog */}
+      <AlertDialog open={invoiceDialogOpen} onOpenChange={setInvoiceDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Invoice Details</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 pt-2">
+                {selectedOrder?.invoices && selectedOrder.invoices.length > 0 ? (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div className="font-medium">Invoice Number:</div>
+                      <div>{selectedOrder.invoices[0].invoiceNumber}</div>
+                      
+                      <div className="font-medium">Invoice Date:</div>
+                      <div>{formatDate(selectedOrder.invoices[0].invoiceDate)}</div>
+                      
+                      <div className="font-medium">Order Ref:</div>
+                      <div>{selectedOrder.refNumber}</div>
+                      
+                      <div className="font-medium">Created:</div>
+                      <div>{formatDate(selectedOrder.invoices[0].createdAt)}</div>
+                    </div>
+                    
+                    {selectedOrder.invoices[0].documents && selectedOrder.invoices[0].documents.length > 0 && (
+                      <div className="pt-2 border-t">
+                        <div className="font-medium text-sm mb-2">Documents ({selectedOrder.invoices[0].documents.length}):</div>
+                        <div className="space-y-1">
+                          {selectedOrder.invoices[0].documents.map((doc: any) => (
+                            <button
+                              key={doc.id}
+                              onClick={() => window.open(`/api/invoices/${selectedOrder.invoices[0].id}/documents/${doc.id}`, '_blank')}
+                              className="flex items-center gap-2 text-sm hover:bg-gray-100 p-2 rounded w-full text-left"
+                            >
+                              <Download className="h-4 w-4 text-muted-foreground" />
+                              <span>{doc.originalName}</span>
+                              <span className="text-xs text-muted-foreground ml-auto">
+                                ({(doc.size / 1024).toFixed(1)} KB)
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <p>No invoice found for this order.</p>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setInvoiceDialogOpen(false)}>
+              Close
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog open={deleteId !== null} onOpenChange={() => {
         setDeleteId(null);

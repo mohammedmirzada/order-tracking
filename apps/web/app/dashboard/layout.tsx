@@ -1,4 +1,5 @@
 import { ReactNode } from "react";
+import type { Metadata } from "next";
 import Image from "next/image";
 import { SidebarNav } from "@/components/dashboard/sidebar-nav";
 import { LogoutButton } from "@/components/dashboard/logout-button";
@@ -8,6 +9,11 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Menu } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+
+export const metadata: Metadata = {
+  title: "Dashboard | Order Tracking System",
+  description: "Order tracking dashboard",
+};
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
