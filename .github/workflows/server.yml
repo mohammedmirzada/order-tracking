@@ -51,7 +51,7 @@ jobs:
             rm -rf .next
             rm -rf node_modules/.cache
             rm -rf .turbo
-            pnpm build --force
+            pnpm build
             
             # Restart services
             echo "🔄 Restarting services..."
