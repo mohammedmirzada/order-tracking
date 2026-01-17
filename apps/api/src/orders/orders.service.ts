@@ -37,7 +37,6 @@ export class OrdersService {
         include: { 
           supplier: true, 
           forwarder: true, 
-          items: true, 
           invoices: {
             include: {
               documents: {
@@ -68,7 +67,6 @@ export class OrdersService {
       include: {
         supplier: true,
         forwarder: true,
-        items: true,
         invoices: {
           include: {
             documents: { orderBy: { createdAt: 'desc' } },
@@ -97,22 +95,9 @@ export class OrdersService {
         },
       });
 
-      if (dto.items?.length) {
-        await tx.orderItem.createMany({
-          data: dto.items.map((i) => ({
-            orderId: order.id,
-            sku: i.sku,
-            itemName: i.itemName,
-            quantity: i.quantity,
-            price: i.price as any,
-            total: i.total as any,
-          })),
-        });
-      }
-
       return tx.order.findUnique({
         where: { id: order.id },
-        include: { supplier: true, forwarder: true, items: true, invoices: true },
+        include: { supplier: true, forwarder: true, invoices: true },
       });
     });
   }
@@ -135,7 +120,7 @@ export class OrdersService {
   }
 
   remove(id: string) {
-    // cascades delete items/invoices if you set onDelete: Cascade
+    // cascades delete invoices if you set onDelete: Cascade
     return this.prisma.order.delete({ where: { id } });
   }
 }

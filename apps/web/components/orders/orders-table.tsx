@@ -56,14 +56,6 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
     });
   };
 
-  const formatCurrency = (items: { total: number }[]) => {
-    const total = items.reduce((sum, item) => sum + Number(item.total), 0);
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(total);
-  };
-
   const handleDelete = async () => {
     if (!deleteId) return;
 
@@ -110,7 +102,6 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
             <TableHead>Status</TableHead>
             <TableHead>Order Date</TableHead>
             <TableHead>Delivery (Est.)</TableHead>
-            <TableHead className="text-right">Total</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -125,9 +116,6 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
               </TableCell>
               <TableCell>{formatDate(order.orderDate)}</TableCell>
               <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
-              <TableCell className="text-right">
-                {formatCurrency(order.items)}
-              </TableCell>
               <TableCell>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>

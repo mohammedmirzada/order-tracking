@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "OrderStatus" AS ENUM ('DRAFT', 'PLACED', 'IN_TRANSIT', 'DELIVERED', 'CANCELED');
+CREATE TYPE "OrderStatus" AS ENUM ('DRAFT', 'PLACED', 'DISPATCHED', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CANCELED');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -54,21 +54,6 @@ CREATE TABLE "orders" (
 );
 
 -- CreateTable
-CREATE TABLE "order_items" (
-    "id" UUID NOT NULL,
-    "order_id" UUID NOT NULL,
-    "sku" TEXT,
-    "item_name" TEXT NOT NULL,
-    "quantity" INTEGER NOT NULL,
-    "price" DECIMAL(12,2) NOT NULL,
-    "total" DECIMAL(12,2) NOT NULL,
-    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    "updated_at" TIMESTAMP(3) NOT NULL,
-
-    CONSTRAINT "order_items_pkey" PRIMARY KEY ("id")
-);
-
--- CreateTable
 CREATE TABLE "invoices" (
     "id" UUID NOT NULL,
     "order_id" UUID NOT NULL,
@@ -105,12 +90,6 @@ CREATE INDEX "orders_status_idx" ON "orders"("status");
 CREATE INDEX "orders_created_at_idx" ON "orders"("created_at");
 
 -- CreateIndex
-CREATE INDEX "order_items_order_id_idx" ON "order_items"("order_id");
-
--- CreateIndex
-CREATE INDEX "order_items_sku_idx" ON "order_items"("sku");
-
--- CreateIndex
 CREATE INDEX "invoices_order_id_idx" ON "invoices"("order_id");
 
 -- CreateIndex
@@ -121,9 +100,6 @@ ALTER TABLE "orders" ADD CONSTRAINT "orders_supplier_id_fkey" FOREIGN KEY ("supp
 
 -- AddForeignKey
 ALTER TABLE "orders" ADD CONSTRAINT "orders_forwarder_id_fkey" FOREIGN KEY ("forwarder_id") REFERENCES "forwarders"("id") ON DELETE SET NULL ON UPDATE CASCADE;
-
--- AddForeignKey
-ALTER TABLE "order_items" ADD CONSTRAINT "order_items_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "invoices" ADD CONSTRAINT "invoices_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "orders"("id") ON DELETE CASCADE ON UPDATE CASCADE;

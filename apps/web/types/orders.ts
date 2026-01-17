@@ -25,18 +25,6 @@ export interface Forwarder {
   updatedAt: string;
 }
 
-export interface OrderItem {
-  id: string;
-  orderId: string;
-  sku: string;
-  itemName: string;
-  quantity: number;
-  price: number;
-  total: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface InvoiceDocument {
   id: string;
   invoiceId: string;
@@ -76,6 +64,5 @@ export interface Order {
   // Relations
   supplier: Supplier;
   forwarder: Forwarder;
-  items: OrderItem[];
   invoices: Invoice[];
 }

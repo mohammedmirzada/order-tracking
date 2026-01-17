@@ -1,9 +1,10 @@
-import { Type } from 'class-transformer';
-import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
-import { OrderItemDto } from './order-item.dto';
+import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
 
 export enum OrderStatusDto {
+  DRAFT = 'DRAFT',
   PLACED = 'PLACED',
+  DISPATCHED = 'DISPATCHED',
+  SHIPPED = 'SHIPPED',
   IN_TRANSIT = 'IN_TRANSIT',
   DELIVERED = 'DELIVERED',
   CANCELED = 'CANCELED',
@@ -31,10 +32,4 @@ export class CreateOrderDto {
 
   @IsOptional() @IsString() shipmentName?: string;
   @IsOptional() @IsString() comments?: string;
-
-  @IsOptional()
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => OrderItemDto)
-  items?: OrderItemDto[];
 }
