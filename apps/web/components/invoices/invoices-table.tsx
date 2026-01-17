@@ -97,7 +97,7 @@ export function InvoicesTable({ invoices, onUpdate }: InvoicesTableProps) {
               <TableCell className="font-medium">
                 {invoice.invoiceNumber}
               </TableCell>
-              <TableCell>{invoice.order.refNumber}</TableCell>
+              <TableCell>{invoice.order?.refNumber || "—"}</TableCell>
               <TableCell>{formatDate(invoice.invoiceDate)}</TableCell>
               <TableCell>
                 {invoice.documents && invoice.documents.length > 0 ? (

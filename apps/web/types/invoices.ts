@@ -16,7 +16,7 @@ export interface Invoice {
   invoiceDate: string | null;
   createdAt: string;
   updatedAt: string;
-  order: {
+  order?: {
     refNumber: string;
   };
   documents?: InvoiceDocument[];
