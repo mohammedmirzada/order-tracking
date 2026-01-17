@@ -247,7 +247,7 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this order and all its items. This action cannot be undone.
+              This will permanently delete this order. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {error && (
