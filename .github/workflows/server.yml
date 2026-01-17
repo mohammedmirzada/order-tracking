@@ -21,35 +21,35 @@ jobs:
           port: ${{ secrets.PORT }}
           script: |
             set -e
+            echo "🚀 Starting deployment..."
+            
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking
             
-            echo "📥 Pulling latest code..."
-            git pull origin main || git pull origin master
+            # Reset any local changes and pull
+            git fetch origin
+            git reset --hard origin/main
+            git clean -fd
             
-            echo "📦 Installing dependencies..."
             pnpm install
             
-            echo "🗄️ Migrating database..."
             cd apps/api
             pnpm exec prisma generate
-            pnpm exec prisma migrate deploy || true
-            
-            echo "🔨 Building projects..."
-            cd /www/wwwroot/ots.lionsfortco.com/order-tracking
-            pnpm --filter=api build
-            pnpm --filter=web build
-            
-            echo "🔄 Restarting services..."
-            pm2 delete order-tracking-api order-tracking-web 2>/dev/null || true
-            
-            cd apps/api
-            pm2 start node --name "order-tracking-api" -- dist/src/main.js
+            pnpm exec prisma migrate deploy
+            pnpm build
             
             cd ../web
+            pnpm build
+            
+            # Restart services
+            pm2 delete order-tracking-api order-tracking-web 2>/dev/null || true
+            
+            cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/api
+            pm2 start node --name "order-tracking-api" -- dist/src/main.js
+            
+            cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/web
             pm2 start npm --name "order-tracking-web" -- start
             
-            pm2 save --force
-            sleep 3
+            pm2 save
             pm2 list
             
             echo "✅ Deployment complete!"
