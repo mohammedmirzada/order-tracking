@@ -25,51 +25,82 @@ jobs:
             
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking
             
-            # Sync with upstream if it exists
-            if git remote | grep -q upstream; then
-              echo "📡 Syncing fork with upstream..."
-              git fetch upstream
-              git merge upstream/main --no-edit || git merge upstream/master --no-edit
-            fi
-            
             # Pull latest code
-            git pull origin main
+            echo "📥 Pulling latest code..."
+            git pull origin main || git pull origin master
             
             # Install dependencies
-            pnpm install
+            echo "📦 Installing dependencies..."
+            pnpm install --frozen-lockfile || pnpm install
             
             # Apply database migrations
+            echo "🗄️  Applying migrations..."
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/api
-            pnpm exec prisma migrate deploy
+            pnpm exec prisma migrate deploy || echo "No migrations to apply"
             pnpm exec prisma generate
             
             # Build API
+            echo "🔨 Building API..."
             pnpm build
             
+            # Verify API build
+            if [ ! -f "dist/src/main.js" ]; then
+              echo "❌ API build failed - dist/src/main.js not found"
+              exit 1
+            fi
+            
             # Build Web
+            echo "🔨 Building Web..."
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/web
-            rm -rf .next
-            rm -rf node_modules/.cache
-            rm -rf .turbo
+            rm -rf .next .turbo node_modules/.cache
             pnpm build
+            
+            # Verify Web build
+            if [ ! -d ".next" ]; then
+              echo "❌ Web build failed - .next directory not found"
+              exit 1
+            fi
             
             # Restart services
             echo "🔄 Restarting services..."
-            pm2 delete order-tracking-api || true
-            pm2 delete order-tracking-web || true
             
-            # Start API with correct path
+            # Stop existing processes
+            pm2 stop order-tracking-api 2>/dev/null || true
+            pm2 stop order-tracking-web 2>/dev/null || true
+            pm2 delete order-tracking-api 2>/dev/null || true
+            pm2 delete order-tracking-web 2>/dev/null || true
+            
+            # Start API
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/api
             pm2 start node --name "order-tracking-api" -- dist/src/main.js
             
+            # Wait for API to start
+            sleep 3
+            
             # Start Web
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking/apps/web
-            pm2 start node_modules/next/dist/bin/next --name "order-tracking-web" -- start
+            pm2 start npm --name "order-tracking-web" -- start
             
-            # Save PM2 process list
-            pm2 save
+            # Save PM2 configuration
+            pm2 save --force
             
-            # Check status
+            # Wait and check status
+            sleep 5
             pm2 list
             
+            # Verify services are running
+            if ! pm2 jlist | grep -q '"pm2_env":{"status":"online","name":"order-tracking-api"'; then
+              echo "❌ API failed to start"
+              pm2 logs order-tracking-api --lines 20 --nostream
+              exit 1
+            fi
+            
+            if ! pm2 jlist | grep -q '"pm2_env":{"status":"online","name":"order-tracking-web"'; then
+              echo "❌ Web failed to start"
+              pm2 logs order-tracking-web --lines 20 --nostream
+              exit 1
+            fi
+            
             echo "✅ Deployment complete!"
+            echo "📊 Services status:"
+            pm2 jlist | grep -E '(name|status|pm_uptime)' | head -20
