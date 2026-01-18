@@ -8,7 +8,7 @@ import Link from "next/link";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 
 const USE_FAKE_DASHBOARD =
-  process.env.NEXT_PUBLIC_USE_FAKE_DASHBOARD === "true";
+  process.env.NEXT_PUBLIC_USE_FAKE_DASHBOARD === "true" || true;
 
 const FAKE_ORDERS = [
   {
