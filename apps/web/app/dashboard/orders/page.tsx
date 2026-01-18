@@ -1,8 +1,6 @@
-import dynamic from "next/dynamic";
+"use client";
 
-const OrdersClientPage = dynamic(() => import("./orders-client"), {
-  ssr: false,
-});
+import OrdersClientPage from "./orders-client";
 
 export default function OrdersPage() {
   return <OrdersClientPage />;
