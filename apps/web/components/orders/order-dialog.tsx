@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Order, OrderStatus } from "@/types/orders";
+import { Order } from "@/types/orders";
 import {
   Dialog,
   DialogContent,
@@ -65,7 +65,6 @@ export function OrderDialog({
     refNumber: "",
     supplierId: "",
     forwarderId: "",
-    status: "DRAFT" as OrderStatus,
     orderDate: new Date().toISOString().split("T")[0],
     dispatchDate: "",
     estimatedDeliveryDate: "",
@@ -80,7 +79,6 @@ export function OrderDialog({
         refNumber: order.refNumber,
         supplierId: order.supplierId,
         forwarderId: order.forwarderId,
-        status: order.status,
         orderDate: order.orderDate?.split("T")[0] || "",
         dispatchDate: order.dispatchDate?.split("T")[0] || "",
         estimatedDeliveryDate: order.estimatedDeliveryDate?.split("T")[0] || "",
@@ -93,7 +91,6 @@ export function OrderDialog({
         refNumber: "",
         supplierId: "",
         forwarderId: "",
-        status: "DRAFT",
         orderDate: new Date().toISOString().split("T")[0],
         dispatchDate: "",
         estimatedDeliveryDate: "",
@@ -195,7 +192,6 @@ export function OrderDialog({
       const payload: any = {
         supplierId: formData.supplierId,
         forwarderId: formData.forwarderId,
-        status: formData.status,
         orderDate: formData.orderDate || null,
         dispatchDate: formData.dispatchDate || null,
         estimatedDeliveryDate: formData.estimatedDeliveryDate || null,
@@ -260,29 +256,6 @@ export function OrderDialog({
                 required
                 disabled={!!order}
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="status">Status *</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value as OrderStatus })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PLACED">Placed</SelectItem>
-                  <SelectItem value="DISPATCHED">Dispatched</SelectItem>
-                  <SelectItem value="SHIPPED">Shipped</SelectItem>
-                  <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                  <SelectItem value="DELIVERED">Delivered</SelectItem>
-                  <SelectItem value="CANCELED">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { OrderStatusBadge } from "./order-status-badge";
+
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal, Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
 import {
@@ -99,7 +99,6 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
             <TableHead>Ref #</TableHead>
             <TableHead>Supplier</TableHead>
             <TableHead>Forwarder</TableHead>
-            <TableHead>Status</TableHead>
             <TableHead>Order Date</TableHead>
             <TableHead>Delivery (Est.)</TableHead>
             <TableHead className="w-[50px]"></TableHead>
@@ -113,9 +112,6 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
               <TableCell className="font-medium">{order.refNumber}</TableCell>
               <TableCell>{order.supplier?.name || "—"}</TableCell>
               <TableCell>{order.forwarder?.name || "—"}</TableCell>
-              <TableCell>
-                <OrderStatusBadge status={order.status} />
-              </TableCell>
               <TableCell>{formatDate(order.orderDate)}</TableCell>
               <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
               <TableCell>
