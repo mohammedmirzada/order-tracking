@@ -53,6 +53,7 @@ export async function GET(req: NextRequest) {
       data: Array.isArray(data?.data)
         ? data.data.map((order: any) => ({
             ...order,
+            items: Array.isArray(order?.items) ? order.items : [],
             invoices: Array.isArray(order?.invoices) ? order.invoices : [],
           }))
         : [],
