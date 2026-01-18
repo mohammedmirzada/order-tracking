@@ -13,7 +13,9 @@ export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("next", pathname);
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return res;
   }
 
   // If logged in and going to /login → redirect to dashboard
@@ -21,10 +23,13 @@ export function middleware(req: NextRequest) {
     const url = req.nextUrl.clone();
     url.pathname = "/dashboard";
     url.search = "";
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+    return res;
   }
-
-  return NextResponse.next();
+  const res = NextResponse.next();
+  res.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0");
+  return res;
 }
 
 // Only run middleware on these routes

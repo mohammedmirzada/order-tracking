@@ -3,9 +3,39 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Package, Truck, CheckCircle, Clock, AlertCircle, FileText } from "lucide-react";
+import { Package, Truck, CheckCircle, Clock, FileText } from "lucide-react";
 import Link from "next/link";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+
+const USE_FAKE_DASHBOARD =
+  process.env.NEXT_PUBLIC_USE_FAKE_DASHBOARD === "true" || true;
+
+const FAKE_ORDERS = [
+  {
+    id: "o1",
+    refNumber: "APT250106-03",
+    status: "DRAFT",
+    orderDate: new Date().toISOString(),
+    supplier: { name: "Acme Supplies" },
+    items: [{ total: 100 }],
+  },
+  {
+    id: "o2",
+    refNumber: "PI260113004",
+    status: "PLACED",
+    orderDate: new Date().toISOString(),
+    supplier: { name: "Globex" },
+    items: [{ total: 250 }],
+  },
+  {
+    id: "o3",
+    refNumber: "SO777",
+    status: "IN_TRANSIT",
+    orderDate: new Date().toISOString(),
+    supplier: { name: "Initech" },
+    items: [{ total: 500 }],
+  },
+];
 
 interface Order {
   id: string;
@@ -36,6 +66,23 @@ export default function DashboardPage() {
 
   async function fetchStats() {
     try {
+      if (USE_FAKE_DASHBOARD) {
+        const orders = FAKE_ORDERS;
+        setStats({
+          totalOrders: orders.length,
+          draft: orders.filter((o: any) => o.status === "DRAFT").length,
+          placed: orders.filter((o: any) => o.status === "PLACED").length,
+          dispatched: orders.filter((o: any) => o.status === "DISPATCHED").length,
+          shipped: orders.filter((o: any) => o.status === "SHIPPED").length,
+          inTransit: orders.filter((o: any) => o.status === "IN_TRANSIT").length,
+          delivered: orders.filter((o: any) => o.status === "DELIVERED").length,
+          canceled: orders.filter((o: any) => o.status === "CANCELED").length,
+        });
+        setRecentOrders(orders.slice(0, 5));
+        setStatsError(null);
+        return;
+      }
+
       const res = await fetch("/api/orders?limit=1000", { cache: "no-store" });
       if (!res.ok) {
         const message = await res.text().catch(() => "Failed to load orders");
