@@ -35,10 +35,16 @@ export default function DashboardPage() {
 
   async function fetchStats() {
     try {
-      const res = await fetch("/api/orders?limit=1000");
+      const res = await fetch("/api/orders?limit=1000", { cache: "no-store" });
       if (res.ok) {
         const data = await res.json();
-        const orders = data.data || [];
+        const orders = Array.isArray(data?.data)
+          ? data.data.map((order: any) => ({
+              ...order,
+              items: Array.isArray(order?.items) ? order.items : [],
+              supplier: order?.supplier || { name: "—" },
+            }))
+          : [];
         
         setStats({
           totalOrders: orders.length,
