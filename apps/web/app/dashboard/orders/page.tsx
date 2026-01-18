@@ -81,8 +81,13 @@ export default function OrdersPage() {
         throw new Error("Invalid response format from server");
       }
       
-      setOrders(response.data);
-      setMeta(response.meta);
+      setOrders(Array.isArray(response.data) ? response.data : []);
+      setMeta({
+        total: response.meta?.total ?? 0,
+        page: response.meta?.page ?? 1,
+        limit: response.meta?.limit ?? limit,
+        totalPages: response.meta?.totalPages ?? 0,
+      });
       setError(null);
       isInitialLoad.current = false;
     } catch (err) {

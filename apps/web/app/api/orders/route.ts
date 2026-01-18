@@ -37,9 +37,25 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await res.json();
+
+    const normalized = {
+      ...data,
+      data: Array.isArray(data?.data)
+        ? data.data.map((order: any) => ({
+            ...order,
+            invoices: Array.isArray(order?.invoices) ? order.invoices : [],
+          }))
+        : [],
+      meta: {
+        total: Number(data?.meta?.total ?? 0),
+        page: Number(data?.meta?.page ?? 1),
+        limit: Number(data?.meta?.limit ?? (Number(limit) || 10)),
+        totalPages: Number(data?.meta?.totalPages ?? 0),
+      },
+    };
     
     // Add cache control headers to prevent stale data
-    return NextResponse.json(data, {
+    return NextResponse.json(normalized, {
       headers: {
         'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
         'Pragma': 'no-cache',
