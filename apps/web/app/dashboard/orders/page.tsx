@@ -65,18 +65,33 @@ export default function OrdersPage() {
         limit: limit.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
       });
+      
       const res = await fetch(`/api/orders?${params}`, {
         cache: "no-store",
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch orders");
+        const errorText = await res.text();
+        console.error('[Orders] API error:', res.status, errorText);
+        throw new Error(`Failed to fetch orders: ${res.status}`);
       }
 
-      const response: PaginatedResponse = await res.json();
+      const responseText = await res.text();
+      let response: PaginatedResponse;
+      
+      try {
+        response = JSON.parse(responseText);
+      } catch (parseError) {
+        console.error('[Orders] JSON parse error:', parseError, responseText.substring(0, 200));
+        throw new Error("Invalid JSON response from server");
+      }
       
       // Detailed validation and logging
-      console.log('[Orders] API Response:', JSON.stringify(response, null, 2));
+      console.log('[Orders] Raw response:', responseText.substring(0, 500));
       
       if (!response || typeof response !== 'object') {
         console.error('[Orders] Invalid response type:', typeof response);
@@ -88,13 +103,20 @@ export default function OrdersPage() {
         throw new Error("Invalid response format from server");
       }
       
-      // Sanitize orders data
-      const sanitizedOrders = response.data.map((order: any) => ({
-        ...order,
-        supplier: order.supplier || { name: 'Unknown' },
-        forwarder: order.forwarder || { name: 'Unknown' },
-        invoices: Array.isArray(order.invoices) ? order.invoices : []
-      }));
+      // Sanitize orders data with deep cloning
+      const sanitizedOrders = response.data.map((order: any, index: number) => {
+        try {
+          return {
+            ...order,
+            supplier: order.supplier && typeof order.supplier === 'object' ? order.supplier : { name: 'Unknown Supplier' },
+            forwarder: order.forwarder && typeof order.forwarder === 'object' ? order.forwarder : { name: 'Unknown Forwarder' },
+            invoices: Array.isArray(order.invoices) ? order.invoices : []
+          };
+        } catch (err) {
+          console.error(`[Orders] Error sanitizing order ${index}:`, err, order);
+          return null;
+        }
+      }).filter(Boolean);
       
       console.log('[Orders] Sanitized orders count:', sanitizedOrders.length);
       
@@ -103,6 +125,7 @@ export default function OrdersPage() {
       setError(null);
       isInitialLoad.current = false;
     } catch (err) {
+      console.error('[Orders] Fetch error:', err);
       setError(err instanceof Error ? err.message : "Unknown error");
     } finally {
       setLoading(false);
