@@ -55,11 +55,10 @@ export function OrderDialog({
   const [newForwarderName, setNewForwarderName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // TEMPORARILY DISABLED FOR TESTING
-  // const [createInvoice, setCreateInvoice] = useState(false);
-  // const [invoiceNumber, setInvoiceNumber] = useState("");
-  // const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
-  // const [invoiceFiles, setInvoiceFiles] = useState<File[]>([]);
+  const [createInvoice, setCreateInvoice] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState("");
+  const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
+  const [invoiceFiles, setInvoiceFiles] = useState<File[]>([]);
 
   const [formData, setFormData] = useState({
     refNumber: "",
@@ -218,9 +217,49 @@ export function OrderDialog({
 
       const savedOrder = await res.json();
 
-      // TEMPORARILY DISABLED FOR TESTING
       // If creating order and createInvoice is checked, create invoice
-      // if (!order && createInvoice && invoiceNumber.trim()) { ... }
+      if (!order && createInvoice && invoiceNumber.trim()) {
+        try {
+          const invoiceRes = await fetch("/api/invoices", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              orderId: savedOrder.id,
+              invoiceNumber: invoiceNumber.trim(),
+              invoiceDate: invoiceDate || null,
+            }),
+          });
+
+          if (!invoiceRes.ok) {
+            throw new Error("Failed to create invoice");
+          }
+
+          const createdInvoice = await invoiceRes.json();
+
+          // Upload documents if any
+          if (invoiceFiles.length > 0) {
+            for (const file of invoiceFiles) {
+              const formData = new FormData();
+              formData.append("file", file);
+
+              const uploadRes = await fetch(
+                `/api/invoices/${createdInvoice.id}/documents`,
+                {
+                  method: "POST",
+                  body: formData,
+                }
+              );
+
+              if (!uploadRes.ok) {
+                console.error("Failed to upload document:", file.name);
+              }
+            }
+          }
+        } catch (invoiceError) {
+          console.error("Invoice creation error:", invoiceError);
+          // Don't fail the whole operation if invoice fails
+        }
+      }
 
       onSuccess();
       onOpenChange(false);
@@ -248,10 +287,9 @@ export function OrderDialog({
                 onChange={(e) => {
                   const value = e.target.value;
                   setFormData({ ...formData, refNumber: value });
-                  // DISABLED: Auto-update invoice number when creating new order
-                  // if (!order && createInvoice) {
-                  //   setInvoiceNumber(value);
-                  // }
+                  if (!order && createInvoice) {
+                    setInvoiceNumber(value);
+                  }
                 }}
                 required
                 disabled={!!order}
@@ -480,7 +518,24 @@ export function OrderDialog({
                     </div>
                   </div>
                   <div className="space-y-2">
-                    {/* REMOVED: Invoice file upload temporarily disabled for testing */}
+                    <Label htmlFor="invoiceFiles">Invoice Documents (Optional)</Label>
+                    <Input
+                      id="invoiceFiles"
+                      type="file"
+                      multiple
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          setInvoiceFiles(Array.from(e.target.files));
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                    {invoiceFiles.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        {invoiceFiles.length} file(s) selected
+                      </p>
+                    )}
                   </div>
                 </div>
               )}
