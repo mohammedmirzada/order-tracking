@@ -12,15 +12,7 @@ import {
 } from "@/components/ui/table";
 import { OrderStatusBadge } from "./order-status-badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -119,47 +111,51 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
               <TableCell>{formatDate(order.orderDate)}</TableCell>
               <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => {
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
                       setSelectedComment(order.comments || "No comment");
                       setCommentDialogOpen(true);
-                    }}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Comment
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setInvoiceDialogOpen(true);
-                      }}
-                      disabled={!order.invoices || !Array.isArray(order.invoices) || order.invoices.length === 0}
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      View Invoice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit?.(order)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setDeleteId(order.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View Comment</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setInvoiceDialogOpen(true);
+                    }}
+                    disabled={!order.invoices || !Array.isArray(order.invoices) || order.invoices.length === 0}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span className="sr-only">View Invoice</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onEdit?.(order)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => setDeleteId(order.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
             );

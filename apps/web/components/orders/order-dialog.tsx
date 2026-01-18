@@ -12,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 
@@ -304,25 +297,21 @@ export function OrderDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select
+              <select
                 value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value as OrderStatus })
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as OrderStatus })
                 }
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PLACED">Placed</SelectItem>
-                  <SelectItem value="DISPATCHED">Dispatched</SelectItem>
-                  <SelectItem value="SHIPPED">Shipped</SelectItem>
-                  <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                  <SelectItem value="DELIVERED">Delivered</SelectItem>
-                  <SelectItem value="CANCELED">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="DRAFT">Draft</option>
+                <option value="PLACED">Placed</option>
+                <option value="DISPATCHED">Dispatched</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="IN_TRANSIT">In Transit</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELED">Canceled</option>
+              </select>
             </div>
           </div>
 
@@ -330,23 +319,22 @@ export function OrderDialog({
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier *</Label>
               <div className="flex gap-2">
-                <Select
+                <select
                   value={formData.supplierId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, supplierId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, supplierId: e.target.value })
                   }
+                  className="h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="" disabled>
+                    Select supplier
+                  </option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
                 <Button
                   type="button"
                   variant="outline"
@@ -379,23 +367,22 @@ export function OrderDialog({
             <div className="space-y-2">
               <Label htmlFor="forwarder">Forwarder *</Label>
               <div className="flex gap-2">
-                <Select
+                <select
                   value={formData.forwarderId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, forwarderId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, forwarderId: e.target.value })
                   }
+                  className="h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select forwarder" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {forwarders.map((forwarder) => (
-                      <SelectItem key={forwarder.id} value={forwarder.id}>
-                        {forwarder.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="" disabled>
+                    Select forwarder
+                  </option>
+                  {forwarders.map((forwarder) => (
+                    <option key={forwarder.id} value={forwarder.id}>
+                      {forwarder.name}
+                    </option>
+                  ))}
+                </select>
                 <Button
                   type="button"
                   variant="outline"
