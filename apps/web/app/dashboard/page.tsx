@@ -164,8 +164,8 @@ export default function DashboardPage() {
       </div>
 
       {/* Status Breakdown */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
+      <div className="grid gap-4 md:grid-cols-2" id="dashboard-secondary">
+        <Card id="order-status-breakdown" data-section="order-status-breakdown">
           <CardHeader>
             <CardTitle>Order Status Breakdown</CardTitle>
           </CardHeader>
@@ -215,7 +215,7 @@ export default function DashboardPage() {
         </Card>
 
         {/* Recent Orders */}
-        <Card>
+        <Card id="recent-orders" data-section="recent-orders">
           <CardHeader>
             <CardTitle>Recent Orders</CardTitle>
           </CardHeader>
