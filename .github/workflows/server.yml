@@ -22,7 +22,8 @@ jobs:
           script: |            
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking
             git fetch origin
-            git reset --hard origin/main            
+            git reset --hard origin/main   
+            git checkout main && git pull origin main         
             pnpm install
             cd apps/api
             pnpm exec prisma generate

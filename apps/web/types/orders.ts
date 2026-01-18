@@ -3,6 +3,15 @@
  * Keep in sync with API responses
  */
 
+export type OrderStatus =
+  | "DRAFT"
+  | "PLACED"
+  | "DISPATCHED"
+  | "SHIPPED"
+  | "IN_TRANSIT"
+  | "DELIVERED"
+  | "CANCELED";
+
 export interface Supplier {
   id: string;
   name: string;
@@ -43,6 +52,7 @@ export interface Order {
   refNumber: string;
   supplierId: string;
   forwarderId: string;
+  status: OrderStatus;
   orderDate: string | null;
   dispatchDate: string | null;
   estimatedDeliveryDate: string | null;
