@@ -20,6 +20,13 @@ export function OrderStatusBadge({ status }: { status: OrderStatus }) {
   };
 
   const config = variants[status];
+  if (!config) {
+    return (
+      <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+        Unknown
+      </Badge>
+    );
+  }
 
   return <Badge className={config.className}>{config.label}</Badge>;
 }
