@@ -22,6 +22,7 @@ interface PaginatedResponse {
 }
 
 export default function OrdersPage() {
+  const [mounted, setMounted] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
@@ -39,6 +40,10 @@ export default function OrdersPage() {
     totalPages: 0,
   });
   const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -114,7 +119,7 @@ export default function OrdersPage() {
     }
   };
 
-  if (loading) {
+  if (!mounted || loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
