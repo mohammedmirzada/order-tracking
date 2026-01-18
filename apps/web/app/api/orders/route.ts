@@ -3,9 +3,6 @@ import { cookies } from "next/headers";
 
 const API_URL = process.env.API_URL || "http://localhost:3001";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
-
 export async function GET(req: NextRequest) {
   const cookieStore = await cookies();
   const token = cookieStore.get("access_token")?.value;
