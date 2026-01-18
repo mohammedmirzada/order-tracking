@@ -29,6 +29,7 @@ jobs:
             pnpm exec prisma migrate deploy
             pnpm build
             cd ../web
+            rm -rf .next
             pnpm build
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking
             pm2 order-tracking-web
