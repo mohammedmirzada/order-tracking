@@ -6,7 +6,20 @@ datasource db {
   provider = "postgresql"
 }
 
-
+/**
+ * Career-standard enums:
+ * - Prevent random strings in status
+ * - Easy filtering in API + UI
+ */
+enum OrderStatus {
+  DRAFT
+  PLACED
+  DISPATCHED
+  SHIPPED
+  IN_TRANSIT
+  DELIVERED
+  CANCELED
+}
 
 /**
  * Auth / Users (simple + standard)
@@ -62,6 +75,7 @@ model Order {
   forwarderId            String?     @db.Uuid @map("forwarder_id")
   forwarder              Forwarder?  @relation(fields: [forwarderId], references: [id], onDelete: SetNull)
 
+  status                 OrderStatus @default(DRAFT)
   orderDate              DateTime?   @map("order_date")
   dispatchDate           DateTime?   @map("dispatch_date")
   estimatedDeliveryDate  DateTime?   @map("estimated_delivery_date")
@@ -78,6 +92,7 @@ model Order {
   @@map("orders")
   @@index([supplierId])
   @@index([forwarderId])
+  @@index([status])
   @@index([createdAt])
 }
 

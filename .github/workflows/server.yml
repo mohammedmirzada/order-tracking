@@ -33,6 +33,6 @@ jobs:
             rm -rf .next
             pnpm build
             cd /www/wwwroot/ots.lionsfortco.com/order-tracking
-            pm2 order-tracking-web
-            pm2 order-tracking-api
+            pm2 restart order-tracking-api
+            pm2 restart order-tracking-web
             pm2 save
