@@ -179,12 +179,14 @@ export default function OrdersPage() {
         />
       )}
 
-      <OrderDialog
-        open={dialogOpen}
-        onOpenChange={handleDialogClose}
-        order={selectedOrder}
-        onSuccess={fetchOrders}
-      />
+      {dialogOpen && (
+        <OrderDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogClose}
+          order={selectedOrder}
+          onSuccess={fetchOrders}
+        />
+      )}
     </div>
   );
 }
