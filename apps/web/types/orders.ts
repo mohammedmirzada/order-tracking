@@ -63,7 +63,7 @@ export interface Order {
   updatedAt: string;
 
   // Relations
-  supplier: Supplier;
-  forwarder: Forwarder;
-  invoices: Invoice[];
+  supplier?: Supplier;
+  forwarder?: Forwarder;
+  invoices?: Invoice[];
 }

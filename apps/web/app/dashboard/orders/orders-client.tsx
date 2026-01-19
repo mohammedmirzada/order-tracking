@@ -1,16 +1,27 @@
 "use client";
 
 import { useEffect, useState, useCallback, useRef } from "react";
-import { Invoice } from "@/types/invoices";
-import { InvoicesTable } from "@/components/invoices/invoices-table";
-import { InvoiceDialog } from "@/components/invoices/invoice-dialog";
+import { Order } from "@/types/orders";
+import dynamic from "next/dynamic";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Pagination } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
 
+const OrdersTable = dynamic(
+  () => import("@/components/orders/orders-table").then((m) => m.OrdersTable),
+  { ssr: false }
+);
+
+const OrderDialog = dynamic(
+  () => import("@/components/orders/order-dialog").then((m) => m.OrderDialog),
+  { ssr: false }
+);
+
 interface PaginatedResponse {
-  data: Invoice[];
+  data: Order[];
   meta: {
     total: number;
     page: number;
@@ -19,8 +30,9 @@ interface PaginatedResponse {
   };
 }
 
-export default function InvoicesPage() {
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+export default function OrdersClientPage() {
+  const [mounted, setMounted] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +40,8 @@ export default function InvoicesPage() {
   const [limit] = useState(10);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedOrder, setSelectedOrder] = useState<Order | undefined>(undefined);
   const [meta, setMeta] = useState({
     total: 0,
     page: 1,
@@ -35,6 +49,10 @@ export default function InvoicesPage() {
     totalPages: 0,
   });
   const isInitialLoad = useRef(true);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Debounce search input
   useEffect(() => {
@@ -48,39 +66,42 @@ export default function InvoicesPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
-  const fetchInvoices = useCallback(async () => {
+  const fetchOrders = useCallback(async () => {
     try {
-      // Only show skeleton on initial load, use subtle indicator for search
       if (isInitialLoad.current) {
         setLoading(true);
       } else {
         setSearching(true);
       }
-      
+
       const params = new URLSearchParams({
         page: page.toString(),
         limit: limit.toString(),
         ...(debouncedSearch && { search: debouncedSearch }),
-        _t: Date.now().toString(), // Cache buster
       });
-      const res = await fetch(`/api/invoices?${params}`, {
+      const res = await fetch(`/api/orders?${params}`, {
         cache: "no-store",
       });
 
       if (!res.ok) {
-        throw new Error("Failed to fetch invoices");
+        throw new Error("Failed to fetch orders");
       }
 
       const response: PaginatedResponse = await res.json();
-      
+
       // Validate response data
       if (!response.data || !Array.isArray(response.data)) {
         console.error("Invalid response format:", response);
         throw new Error("Invalid response format from server");
       }
-      
-      setInvoices(response.data);
-      setMeta(response.meta);
+
+      setOrders(Array.isArray(response.data) ? response.data : []);
+      setMeta({
+        total: response.meta?.total ?? 0,
+        page: response.meta?.page ?? 1,
+        limit: response.meta?.limit ?? limit,
+        totalPages: response.meta?.totalPages ?? 0,
+      });
       setError(null);
       isInitialLoad.current = false;
     } catch (err) {
@@ -92,18 +113,34 @@ export default function InvoicesPage() {
   }, [page, limit, debouncedSearch]);
 
   useEffect(() => {
-    fetchInvoices();
-  }, [fetchInvoices]);
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const handleEdit = (order: Order) => {
+    setSelectedOrder(order);
+    setDialogOpen(true);
+  };
+
+  const handleDialogClose = (open: boolean) => {
+    setDialogOpen(open);
+    if (!open) {
+      setSelectedOrder(undefined);
+    }
+  };
+
+  if (!mounted) {
+    return null;
+  }
 
   if (loading) {
     return (
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div>
-            <Skeleton className="h-8 w-40" />
+            <Skeleton className="h-8 w-32" />
             <Skeleton className="h-4 w-64 mt-2" />
           </div>
-          <Skeleton className="h-10 w-40" />
+          <Skeleton className="h-10 w-32" />
         </div>
         <Skeleton className="h-96 w-full" />
       </div>
@@ -113,7 +150,7 @@ export default function InvoicesPage() {
   if (error) {
     return (
       <div className="rounded-lg border border-destructive p-8 text-center">
-        <p className="text-destructive font-medium">Failed to load invoices</p>
+        <p className="text-destructive font-medium">Failed to load orders</p>
         <p className="text-sm text-muted-foreground mt-1">{error}</p>
       </div>
     );
@@ -123,18 +160,21 @@ export default function InvoicesPage() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Invoices</h1>
+          <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
           <p className="text-sm text-muted-foreground">
-            Manage order invoices
+            Manage your order shipments and tracking
           </p>
         </div>
-        <InvoiceDialog onSuccess={fetchInvoices} />
+        <Button onClick={() => setDialogOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Create Order
+        </Button>
       </div>
 
       <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <Input
-          placeholder="Search invoices..."
+          placeholder="Search orders..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-9"
@@ -147,9 +187,9 @@ export default function InvoicesPage() {
       </div>
 
       <div className={searching ? "opacity-60 transition-opacity" : "transition-opacity"}>
-        <InvoicesTable invoices={invoices} onUpdate={fetchInvoices} />
+        <OrdersTable orders={orders} onUpdate={fetchOrders} onEdit={handleEdit} />
       </div>
-      
+
       {meta.total > 0 && (
         <Pagination
           currentPage={meta.page}
@@ -159,6 +199,15 @@ export default function InvoicesPage() {
           onPageChange={(newPage) => {
             setPage(newPage);
           }}
+        />
+      )}
+
+      {dialogOpen && (
+        <OrderDialog
+          open={dialogOpen}
+          onOpenChange={handleDialogClose}
+          order={selectedOrder}
+          onSuccess={fetchOrders}
         />
       )}
     </div>

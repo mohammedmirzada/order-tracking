@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
     
     const res = await fetch(`${API_URL}/invoices?${queryString}`, {
       headers: { Authorization: `Bearer ${token}` },
+      cache: 'no-store',
     });
 
     if (!res.ok) {
@@ -36,7 +37,15 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+    
+    // Add cache control headers to prevent stale data
+    return NextResponse.json(data, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error("Failed to fetch invoices:", error);
     return NextResponse.json(

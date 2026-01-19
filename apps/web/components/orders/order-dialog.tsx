@@ -12,13 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus } from "lucide-react";
 
@@ -230,39 +223,38 @@ export function OrderDialog({
             body: JSON.stringify({
               orderId: savedOrder.id,
               invoiceNumber: invoiceNumber.trim(),
-              invoiceDate: invoiceDate,
+              invoiceDate: invoiceDate || null,
             }),
           });
 
           if (!invoiceRes.ok) {
-            const invoiceError = await invoiceRes.json();
-            console.error("Failed to create invoice:", invoiceError);
-            throw new Error(invoiceError.message || "Failed to create invoice");
+            throw new Error("Failed to create invoice");
           }
 
           const createdInvoice = await invoiceRes.json();
 
-          // Upload invoice documents if any files selected (one at a time)
+          // Upload documents if any
           if (invoiceFiles.length > 0) {
             for (const file of invoiceFiles) {
               const formData = new FormData();
-              formData.append("file", file); // Backend expects 'file' not 'files'
+              formData.append("file", file);
 
-              const uploadRes = await fetch(`/api/invoices/${createdInvoice.id}/documents`, {
-                method: "POST",
-                body: formData,
-              });
+              const uploadRes = await fetch(
+                `/api/invoices/${createdInvoice.id}/documents`,
+                {
+                  method: "POST",
+                  body: formData,
+                }
+              );
 
               if (!uploadRes.ok) {
-                const uploadError = await uploadRes.json();
-                console.error("Failed to upload document:", file.name, uploadError);
-                throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`);
+                console.error("Failed to upload document:", file.name);
               }
             }
           }
-        } catch (err) {
-          console.error("Failed to create invoice or upload documents:", err);
-          throw err; // Re-throw to show error to user
+        } catch (invoiceError) {
+          console.error("Invoice creation error:", invoiceError);
+          // Don't fail the whole operation if invoice fails
         }
       }
 
@@ -292,7 +284,6 @@ export function OrderDialog({
                 onChange={(e) => {
                   const value = e.target.value;
                   setFormData({ ...formData, refNumber: value });
-                  // Auto-update invoice number when creating new order
                   if (!order && createInvoice) {
                     setInvoiceNumber(value);
                   }
@@ -301,28 +292,26 @@ export function OrderDialog({
                 disabled={!!order}
               />
             </div>
+          </div>
 
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="status">Status *</Label>
-              <Select
+              <select
                 value={formData.status}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, status: value as OrderStatus })
+                onChange={(e) =>
+                  setFormData({ ...formData, status: e.target.value as OrderStatus })
                 }
+                className="h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                  <SelectItem value="PLACED">Placed</SelectItem>
-                  <SelectItem value="DISPATCHED">Dispatched</SelectItem>
-                  <SelectItem value="SHIPPED">Shipped</SelectItem>
-                  <SelectItem value="IN_TRANSIT">In Transit</SelectItem>
-                  <SelectItem value="DELIVERED">Delivered</SelectItem>
-                  <SelectItem value="CANCELED">Canceled</SelectItem>
-                </SelectContent>
-              </Select>
+                <option value="DRAFT">Draft</option>
+                <option value="PLACED">Placed</option>
+                <option value="DISPATCHED">Dispatched</option>
+                <option value="SHIPPED">Shipped</option>
+                <option value="IN_TRANSIT">In Transit</option>
+                <option value="DELIVERED">Delivered</option>
+                <option value="CANCELED">Canceled</option>
+              </select>
             </div>
           </div>
 
@@ -330,23 +319,22 @@ export function OrderDialog({
             <div className="space-y-2">
               <Label htmlFor="supplier">Supplier *</Label>
               <div className="flex gap-2">
-                <Select
+                <select
                   value={formData.supplierId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, supplierId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, supplierId: e.target.value })
                   }
+                  className="h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select supplier" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {suppliers.map((supplier) => (
-                      <SelectItem key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="" disabled>
+                    Select supplier
+                  </option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
                 <Button
                   type="button"
                   variant="outline"
@@ -379,23 +367,22 @@ export function OrderDialog({
             <div className="space-y-2">
               <Label htmlFor="forwarder">Forwarder *</Label>
               <div className="flex gap-2">
-                <Select
+                <select
                   value={formData.forwarderId}
-                  onValueChange={(value) =>
-                    setFormData({ ...formData, forwarderId: value })
+                  onChange={(e) =>
+                    setFormData({ ...formData, forwarderId: e.target.value })
                   }
+                  className="h-10 w-full flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select forwarder" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {forwarders.map((forwarder) => (
-                      <SelectItem key={forwarder.id} value={forwarder.id}>
-                        {forwarder.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <option value="" disabled>
+                    Select forwarder
+                  </option>
+                  {forwarders.map((forwarder) => (
+                    <option key={forwarder.id} value={forwarder.id}>
+                      {forwarder.name}
+                    </option>
+                  ))}
+                </select>
                 <Button
                   type="button"
                   variant="outline"

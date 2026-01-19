@@ -12,15 +12,7 @@ import {
 } from "@/components/ui/table";
 import { OrderStatusBadge } from "./order-status-badge";
 import { Button } from "@/components/ui/button";
-import { MoreHorizontal, Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Eye, Pencil, Trash2, FileText, Download } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -106,61 +98,78 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {orders.map((order) => (
+          {orders.map((order) => {
+            try {
+              return (
             <TableRow key={order.id}>
               <TableCell className="font-medium">{order.refNumber}</TableCell>
-              <TableCell>{order.supplier.name}</TableCell>
-              <TableCell>{order.forwarder.name}</TableCell>
+              <TableCell>{order.supplier?.name || "—"}</TableCell>
+              <TableCell>{order.forwarder?.name || "—"}</TableCell>
               <TableCell>
                 <OrderStatusBadge status={order.status} />
               </TableCell>
               <TableCell>{formatDate(order.orderDate)}</TableCell>
               <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
               <TableCell>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                      <MoreHorizontal className="h-4 w-4" />
-                      <span className="sr-only">Open menu</span>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => {
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
                       setSelectedComment(order.comments || "No comment");
                       setCommentDialogOpen(true);
-                    }}>
-                      <Eye className="mr-2 h-4 w-4" />
-                      View Comment
-                    </DropdownMenuItem>
-                    <DropdownMenuItem 
-                      onClick={() => {
-                        setSelectedOrder(order);
-                        setInvoiceDialogOpen(true);
-                      }}
-                      disabled={!order.invoices || order.invoices.length === 0}
-                    >
-                      <FileText className="mr-2 h-4 w-4" />
-                      View Invoice
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => onEdit?.(order)}>
-                      <Pencil className="mr-2 h-4 w-4" />
-                      Edit
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onClick={() => setDeleteId(order.id)}
-                    >
-                      <Trash2 className="mr-2 h-4 w-4" />
-                      Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                    }}
+                  >
+                    <Eye className="h-4 w-4" />
+                    <span className="sr-only">View Comment</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => {
+                      setSelectedOrder(order);
+                      setInvoiceDialogOpen(true);
+                    }}
+                    disabled={!order.invoices || !Array.isArray(order.invoices) || order.invoices.length === 0}
+                  >
+                    <FileText className="h-4 w-4" />
+                    <span className="sr-only">View Invoice</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8"
+                    onClick={() => onEdit?.(order)}
+                  >
+                    <Pencil className="h-4 w-4" />
+                    <span className="sr-only">Edit</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive"
+                    onClick={() => setDeleteId(order.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    <span className="sr-only">Delete</span>
+                  </Button>
+                </div>
               </TableCell>
             </TableRow>
-          ))}
+            );
+            } catch (error) {
+              console.error('[OrdersTable] Error rendering order:', order.id, error);
+              return (
+                <TableRow key={order.id}>
+                  <TableCell colSpan={7} className="text-destructive">
+                    Error displaying order {order.refNumber || order.id}
+                  </TableCell>
+                </TableRow>
+              );
+            }
+          })}
         </TableBody>
       </Table>
 
@@ -188,30 +197,35 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
             <AlertDialogTitle>Invoice Details</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <div className="space-y-3 pt-2">
-                {selectedOrder?.invoices && selectedOrder.invoices.length > 0 ? (
+                {selectedOrder?.invoices && Array.isArray(selectedOrder.invoices) && selectedOrder.invoices.length > 0 ? (
                   <>
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="font-medium">Invoice Number:</div>
-                      <div>{selectedOrder.invoices[0].invoiceNumber}</div>
+                      <div>{selectedOrder.invoices[0]?.invoiceNumber || "—"}</div>
                       
                       <div className="font-medium">Invoice Date:</div>
-                      <div>{formatDate(selectedOrder.invoices[0].invoiceDate)}</div>
+                      <div>{formatDate(selectedOrder.invoices[0]?.invoiceDate)}</div>
                       
                       <div className="font-medium">Order Ref:</div>
                       <div>{selectedOrder.refNumber}</div>
                       
                       <div className="font-medium">Created:</div>
-                      <div>{formatDate(selectedOrder.invoices[0].createdAt)}</div>
+                      <div>{formatDate(selectedOrder.invoices[0]?.createdAt)}</div>
                     </div>
                     
-                    {selectedOrder.invoices[0].documents && selectedOrder.invoices[0].documents.length > 0 && (
+                    {selectedOrder.invoices?.[0]?.documents && Array.isArray(selectedOrder.invoices[0].documents) && selectedOrder.invoices[0].documents.length > 0 && (
                       <div className="pt-2 border-t">
                         <div className="font-medium text-sm mb-2">Documents ({selectedOrder.invoices[0].documents.length}):</div>
                         <div className="space-y-1">
-                          {selectedOrder.invoices[0].documents.map((doc: any) => (
+                          {(selectedOrder.invoices[0].documents || []).map((doc: any) => (
                             <button
                               key={doc.id}
-                              onClick={() => window.open(`/api/invoices/${selectedOrder.invoices[0].id}/documents/${doc.id}`, '_blank')}
+                              onClick={() => {
+                                const invoiceId = selectedOrder?.invoices?.[0]?.id;
+                                if (invoiceId) {
+                                  window.open(`/api/invoices/${invoiceId}/documents/${doc.id}`, '_blank');
+                                }
+                              }}
                               className="flex items-center gap-2 text-sm hover:bg-gray-100 p-2 rounded w-full text-left"
                             >
                               <Download className="h-4 w-4 text-muted-foreground" />
@@ -247,7 +261,7 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete this order and all its items. This action cannot be undone.
+              This will permanently delete this order. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           {error && (

@@ -23,10 +23,20 @@ export async function GET(req: NextRequest) {
       ...(search && { search }),
     }).toString();
     
-    const res = await fetch(`${API_URL}/orders?${queryString}`, {
-      headers: { Authorization: `Bearer ${token}` },
-      cache: 'no-store',
-    });
+    const fetchWithRetry = async (retries = 1, delayMs = 300) => {
+      try {
+        return await fetch(`${API_URL}/orders?${queryString}`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+      } catch (err) {
+        if (retries <= 0) throw err;
+        await new Promise((resolve) => setTimeout(resolve, delayMs));
+        return fetchWithRetry(retries - 1, delayMs * 2);
+      }
+    };
+
+    const res = await fetchWithRetry(1, 300);
 
     if (!res.ok) {
       const error = await res.json();
@@ -37,7 +47,32 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await res.json();
-    return NextResponse.json(data);
+
+    const normalized = {
+      ...data,
+      data: Array.isArray(data?.data)
+        ? data.data.map((order: any) => ({
+            ...order,
+            items: Array.isArray(order?.items) ? order.items : [],
+            invoices: Array.isArray(order?.invoices) ? order.invoices : [],
+          }))
+        : [],
+      meta: {
+        total: Number(data?.meta?.total ?? 0),
+        page: Number(data?.meta?.page ?? 1),
+        limit: Number(data?.meta?.limit ?? (Number(limit) || 10)),
+        totalPages: Number(data?.meta?.totalPages ?? 0),
+      },
+    };
+    
+    // Add cache control headers to prevent stale data
+    return NextResponse.json(normalized, {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
+      },
+    });
   } catch (error) {
     console.error("Failed to fetch orders:", error);
     return NextResponse.json(
