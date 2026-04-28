@@ -19,17 +19,20 @@ jobs:
           script: |
             set -e
             cd /www/wwwroot/ots.lionsfortco.com
-
+            git config --global --add safe.directory /www/wwwroot/dash.lionsfortco.com/dash
+            eval `ssh-agent -s`
+            ssh-add /root/.ssh/id_rsa
+            ssh -T git@github.com
             git remote set-url origin  git@github.com:mohammedmirzada/order-tracking.git
+            git reset --hard origin/main
+            git fetch origin
+            git checkout main
             git pull origin main
-
+            git pull origin main
             pnpm install
-
             # SAFE: only applies pending migrations, never resets or drops data
             pnpm --filter api exec prisma migrate deploy
             pnpm --filter api exec prisma generate
-
             pnpm --filter api build
             pnpm --filter web build
-
             pm2 restart all
