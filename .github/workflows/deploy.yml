@@ -28,6 +28,9 @@ jobs:
           git checkout main
           git pull origin main
           pnpm install
+          # clear build artifacts and caches before rebuilding
+          rm -rf apps/api/dist
+          rm -rf apps/web/.next
           # SAFE: only applies pending migrations, never resets or drops data
           pnpm --filter api exec prisma migrate deploy
           pnpm --filter api exec prisma generate
