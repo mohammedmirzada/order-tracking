@@ -1,38 +1,36 @@
-name: Deploy to Production
-
+name: Server
 on:
+  workflow_dispatch:
   push:
-    branches: [main]
-
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.IP }}
-          port: ${{ secrets.PORT }}
-          username: ${{ secrets.USERNAME }}
-          password: ${{ secrets.PASSWORD }}
-          script: |
-            set -e
-            cd /www/wwwroot/ots.lionsfortco.com
-            git config --global --add safe.directory /www/wwwroot/dash.lionsfortco.com/dash
-            eval `ssh-agent -s`
-            ssh-add /root/.ssh/id_rsa
-            ssh -T git@github.com
-            git remote set-url origin  git@github.com:mohammedmirzada/order-tracking.git
-            git reset --hard origin/main
-            git fetch origin
-            git checkout main
-            git pull origin main
-            git pull origin main
-            pnpm install
-            # SAFE: only applies pending migrations, never resets or drops data
-            pnpm --filter api exec prisma migrate deploy
-            pnpm --filter api exec prisma generate
-            pnpm --filter api build
-            pnpm --filter web build
-            pm2 restart all
+    - name: Executing remote SSH commands
+      uses: appleboy/ssh-action@v1.0.0
+      with:
+        host: ${{ secrets.IP }}
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: ${{ secrets.PORT}}
+        script: |
+          cd /www/wwwroot/ots.lionsfortco.com/order-tracking
+          eval `ssh-agent -s`
+          ssh-add /root/.ssh/id_rsa
+          ssh -T git@github.com
+          git config --global --add safe.directory /www/wwwroot/ots.lionsfortco.com/order-tracking
+          git remote set-url origin git@github.com:mohammedmirzada/order-tracking.git
+          git reset --hard origin/main
+          git fetch origin
+          git checkout main
+          git pull origin main
+          pnpm install
+          # SAFE: only applies pending migrations, never resets or drops data
+          pnpm --filter api exec prisma migrate deploy
+          pnpm --filter api exec prisma generate
+          pnpm --filter api build
+          pnpm --filter web build
+          pm2 restart all
