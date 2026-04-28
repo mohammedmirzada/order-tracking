@@ -20,6 +20,7 @@ jobs:
             set -e
             cd /www/wwwroot/ots.lionsfortco.com
 
+            git remote set-url origin  git@github.com:mohammedmirzada/order-tracking.git
             git pull origin main
 
             pnpm install
