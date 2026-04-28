@@ -47,6 +47,16 @@ export interface Invoice {
   documents?: InvoiceDocument[];
 }
 
+export interface OrderItem {
+  id: string;
+  orderId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Order {
   id: string;
   refNumber: string;
@@ -59,11 +69,13 @@ export interface Order {
   actualDeliveryDate: string | null;
   shipmentName: string | null;
   comments: string | null;
+  totalPrice: number | null;
   createdAt: string;
   updatedAt: string;
 
   // Relations
   supplier?: Supplier;
   forwarder?: Forwarder;
+  items?: OrderItem[];
   invoices?: Invoice[];
 }

@@ -13,7 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+
+interface ItemRow {
+  name: string;
+  quantity: string;
+  unitPrice: string;
+}
 
 interface Supplier {
   id: string;
@@ -48,6 +54,19 @@ export function OrderDialog({
   const [newForwarderName, setNewForwarderName] = useState("");
   const [creating, setCreating] = useState(false);
 
+  const [items, setItems] = useState<ItemRow[]>([]);
+
+  const addItem = () => setItems([...items, { name: "", quantity: "1", unitPrice: "" }]);
+  const removeItem = (i: number) => setItems(items.filter((_, idx) => idx !== i));
+  const updateItem = (i: number, field: keyof ItemRow, value: string) =>
+    setItems(items.map((item, idx) => (idx === i ? { ...item, [field]: value } : item)));
+
+  const totalPrice = items.reduce((sum, item) => {
+    const qty = parseFloat(item.quantity) || 0;
+    const price = parseFloat(item.unitPrice) || 0;
+    return sum + qty * price;
+  }, 0);
+
   const [createInvoice, setCreateInvoice] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("");
   const [invoiceDate, setInvoiceDate] = useState(new Date().toISOString().split("T")[0]);
@@ -80,6 +99,13 @@ export function OrderDialog({
         shipmentName: order.shipmentName || "",
         comments: order.comments || "",
       });
+      setItems(
+        (order.items || []).map((item) => ({
+          name: item.name,
+          quantity: String(item.quantity),
+          unitPrice: String(item.unitPrice),
+        }))
+      );
     } else {
       setFormData({
         refNumber: "",
@@ -93,6 +119,7 @@ export function OrderDialog({
         shipmentName: "",
         comments: "",
       });
+      setItems([]);
     }
   }, [order, open]);
 
@@ -184,6 +211,14 @@ export function OrderDialog({
       const url = order ? `/api/orders/${order.id}` : "/api/orders";
       const method = order ? "PATCH" : "POST";
 
+      const validItems = items
+        .filter((item) => item.name.trim() && parseFloat(item.quantity) > 0 && parseFloat(item.unitPrice) > 0)
+        .map((item) => ({
+          name: item.name.trim(),
+          quantity: parseInt(item.quantity, 10),
+          unitPrice: parseFloat(item.unitPrice),
+        }));
+
       const payload: any = {
         supplierId: formData.supplierId,
         forwarderId: formData.forwarderId,
@@ -194,6 +229,7 @@ export function OrderDialog({
         actualDeliveryDate: formData.actualDeliveryDate || null,
         shipmentName: formData.shipmentName || null,
         comments: formData.comments || null,
+        items: validItems,
       };
 
       // Only include refNumber when creating
@@ -269,7 +305,10 @@ export function OrderDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+      <DialogContent
+        className="max-w-[75vw] w-[75vw] max-h-[90vh] overflow-y-auto"
+        onInteractOutside={(e) => e.preventDefault()}
+      >
         <DialogHeader>
           <DialogTitle>{order ? "Edit Order" : "Create Order"}</DialogTitle>
         </DialogHeader>
@@ -492,6 +531,73 @@ export function OrderDialog({
               }
               rows={3}
             />
+          </div>
+
+          {/* Order Items */}
+          <div className="space-y-3 pt-4 border-t">
+            <div className="flex items-center justify-between">
+              <Label>Order Items</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addItem}>
+                <Plus className="h-3 w-3 mr-1" />
+                Add Item
+              </Button>
+            </div>
+
+            {items.length > 0 && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-2 text-xs text-muted-foreground px-1">
+                  <span>Name</span>
+                  <span>Qty</span>
+                  <span>Unit Price</span>
+                  <span>Sub Total</span>
+                  <span />
+                </div>
+                {items.map((item, i) => {
+                  const sub = (parseFloat(item.quantity) || 0) * (parseFloat(item.unitPrice) || 0);
+                  return (
+                    <div key={i} className="grid grid-cols-[1fr_80px_100px_80px_32px] gap-2 items-center">
+                      <Input
+                        placeholder="Item name"
+                        value={item.name}
+                        onChange={(e) => updateItem(i, "name", e.target.value)}
+                      />
+                      <Input
+                        type="number"
+                        min="1"
+                        placeholder="1"
+                        value={item.quantity}
+                        onChange={(e) => updateItem(i, "quantity", e.target.value)}
+                      />
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="0.00"
+                        value={item.unitPrice}
+                        onChange={(e) => updateItem(i, "unitPrice", e.target.value)}
+                      />
+                      <span className="text-sm text-right pr-1">
+                        {sub > 0 ? sub.toFixed(2) : "—"}
+                      </span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive"
+                        onClick={() => removeItem(i)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  );
+                })}
+                <div className="flex justify-end pr-10 pt-1 border-t">
+                  <span className="text-sm font-semibold">
+                    Total: {totalPrice > 0 ? totalPrice.toFixed(2) : "0.00"}
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
 
           {!order && (

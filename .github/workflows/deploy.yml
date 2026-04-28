@@ -1,0 +1,34 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.IP }}
+          port: ${{ secrets.PORT }}
+          username: ${{ secrets.USERNAME }}
+          password: ${{ secrets.PASSWORD }}
+          script: |
+            set -e
+            cd /www/wwwroot/ots.lionsfortco.com
+
+            git pull origin main
+
+            pnpm install
+
+            # SAFE: only applies pending migrations, never resets or drops data
+            pnpm --filter api exec prisma migrate deploy
+            pnpm --filter api exec prisma generate
+
+            pnpm --filter api build
+            pnpm --filter web build
+
+            pm2 restart all

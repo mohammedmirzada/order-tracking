@@ -1,4 +1,18 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsArray, IsDateString, IsEnum, IsNumber, IsOptional, IsPositive, IsString, IsUUID, Min, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class OrderItemDto {
+  @IsString()
+  name: string;
+
+  @IsNumber()
+  @Min(1)
+  quantity: number;
+
+  @IsNumber()
+  @IsPositive()
+  unitPrice: number;
+}
 
 export enum OrderStatusDto {
   DRAFT = 'DRAFT',
@@ -32,4 +46,10 @@ export class CreateOrderDto {
 
   @IsOptional() @IsString() shipmentName?: string;
   @IsOptional() @IsString() comments?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items?: OrderItemDto[];
 }

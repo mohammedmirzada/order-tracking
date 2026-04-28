@@ -94,6 +94,7 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
             <TableHead>Status</TableHead>
             <TableHead>Order Date</TableHead>
             <TableHead>Delivery (Est.)</TableHead>
+            <TableHead className="text-right">Total</TableHead>
             <TableHead className="w-[50px]"></TableHead>
           </TableRow>
         </TableHeader>
@@ -110,6 +111,11 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
               </TableCell>
               <TableCell>{formatDate(order.orderDate)}</TableCell>
               <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
+              <TableCell className="text-right">
+                {order.totalPrice != null && order.totalPrice > 0
+                  ? order.totalPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                  : "—"}
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
                   <Button
@@ -163,7 +169,7 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
               console.error('[OrdersTable] Error rendering order:', order.id, error);
               return (
                 <TableRow key={order.id}>
-                  <TableCell colSpan={7} className="text-destructive">
+                  <TableCell colSpan={8} className="text-destructive">
                     Error displaying order {order.refNumber || order.id}
                   </TableCell>
                 </TableRow>

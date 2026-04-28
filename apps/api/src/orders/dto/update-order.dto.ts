@@ -1,5 +1,6 @@
-import { IsDateString, IsEnum, IsOptional, IsString, IsUUID } from 'class-validator';
-import { OrderStatusDto } from './create-order.dto';
+import { IsArray, IsDateString, IsEnum, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+import { OrderItemDto, OrderStatusDto } from './create-order.dto';
 
 export class UpdateOrderDto {
   @IsOptional() @IsUUID() supplierId?: string;
@@ -14,4 +15,10 @@ export class UpdateOrderDto {
 
   @IsOptional() @IsString() shipmentName?: string;
   @IsOptional() @IsString() comments?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => OrderItemDto)
+  items?: OrderItemDto[];
 }

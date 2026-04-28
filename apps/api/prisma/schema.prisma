@@ -83,7 +83,9 @@ model Order {
 
   shipmentName           String?     @map("shipment_name")
   comments               String?
+  totalPrice             Float?      @map("total_price")
 
+  items                  OrderItem[]
   invoices               Invoice[]
 
   createdAt              DateTime    @default(now()) @map("created_at")
@@ -94,6 +96,20 @@ model Order {
   @@index([forwarderId])
   @@index([status])
   @@index([createdAt])
+}
+
+model OrderItem {
+  id        String   @id @default(uuid()) @db.Uuid
+  orderId   String   @db.Uuid @map("order_id")
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  Int
+  unitPrice Float    @map("unit_price")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("order_items")
+  @@index([orderId])
 }
 
 model Invoice {
