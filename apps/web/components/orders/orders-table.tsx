@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Order } from "@/types/orders";
 import {
   Table,
@@ -28,9 +28,24 @@ interface OrdersTableProps {
   orders: Order[];
   onUpdate: () => void;
   onEdit?: (order: Order) => void;
+  search?: string;
 }
 
-export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
+function highlightText(text: string, search: string) {
+  const idx = text.toLowerCase().indexOf(search.toLowerCase());
+  if (idx === -1) return <>{text}</>;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-yellow-200 text-yellow-900 rounded-sm px-0.5 not-italic">
+        {text.slice(idx, idx + search.length)}
+      </mark>
+      {text.slice(idx + search.length)}
+    </>
+  );
+}
+
+export function OrdersTable({ orders, onUpdate, onEdit, search }: OrdersTableProps) {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -101,70 +116,97 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
         <TableBody>
           {orders.map((order) => {
             try {
+              const matchedItems = search
+                ? (order.items || []).filter((item) =>
+                    item.name.toLowerCase().includes(search.toLowerCase())
+                  )
+                : [];
+
               return (
-            <TableRow key={order.id}>
-              <TableCell className="font-medium">{order.refNumber}</TableCell>
-              <TableCell>{order.supplier?.name || "—"}</TableCell>
-              <TableCell>{order.forwarder?.name || "—"}</TableCell>
-              <TableCell>
-                <OrderStatusBadge status={order.status} />
-              </TableCell>
-              <TableCell>{formatDate(order.orderDate)}</TableCell>
-              <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
-              <TableCell className="text-right">
-                {order.totalPrice != null && order.totalPrice > 0
-                  ? order.totalPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                  : "—"}
-              </TableCell>
-              <TableCell>
-                <div className="flex items-center gap-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => {
-                      setSelectedComment(order.comments || "No comment");
-                      setCommentDialogOpen(true);
-                    }}
-                  >
-                    <Eye className="h-4 w-4" />
-                    <span className="sr-only">View Comment</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => {
-                      setSelectedOrder(order);
-                      setInvoiceDialogOpen(true);
-                    }}
-                    disabled={!order.invoices || !Array.isArray(order.invoices) || order.invoices.length === 0}
-                  >
-                    <FileText className="h-4 w-4" />
-                    <span className="sr-only">View Invoice</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8"
-                    onClick={() => onEdit?.(order)}
-                  >
-                    <Pencil className="h-4 w-4" />
-                    <span className="sr-only">Edit</span>
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive"
-                    onClick={() => setDeleteId(order.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                </div>
-              </TableCell>
-            </TableRow>
-            );
+                <Fragment key={order.id}>
+                  <TableRow>
+                    <TableCell className="font-medium">{order.refNumber}</TableCell>
+                    <TableCell>{order.supplier?.name || "—"}</TableCell>
+                    <TableCell>{order.forwarder?.name || "—"}</TableCell>
+                    <TableCell>
+                      <OrderStatusBadge status={order.status} />
+                    </TableCell>
+                    <TableCell>{formatDate(order.orderDate)}</TableCell>
+                    <TableCell>{formatDate(order.estimatedDeliveryDate)}</TableCell>
+                    <TableCell className="text-right">
+                      {order.totalPrice != null && order.totalPrice > 0
+                        ? order.totalPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+                        : "—"}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setSelectedComment(order.comments || "No comment");
+                            setCommentDialogOpen(true);
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span className="sr-only">View Comment</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setInvoiceDialogOpen(true);
+                          }}
+                          disabled={!order.invoices || !Array.isArray(order.invoices) || order.invoices.length === 0}
+                        >
+                          <FileText className="h-4 w-4" />
+                          <span className="sr-only">View Invoice</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8"
+                          onClick={() => onEdit?.(order)}
+                        >
+                          <Pencil className="h-4 w-4" />
+                          <span className="sr-only">Edit</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-destructive"
+                          onClick={() => setDeleteId(order.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="sr-only">Delete</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                  {matchedItems.length > 0 && (
+                    <TableRow className="bg-yellow-50/60 hover:bg-yellow-50/80">
+                      <TableCell colSpan={8} className="py-2 pl-10 pr-4">
+                        <div className="flex flex-wrap gap-x-5 gap-y-1">
+                          {matchedItems.map((item) => (
+                            <span key={item.id} className="flex items-center gap-1.5 text-sm">
+                              <span className="font-medium">{highlightText(item.name, search!)}</span>
+                              <span className="text-muted-foreground">·</span>
+                              <span>
+                                {item.quantity} × {item.unitPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                              </span>
+                              <span className="text-muted-foreground">·</span>
+                              <span className="text-muted-foreground">{formatDate(order.orderDate)}</span>
+                            </span>
+                          ))}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </Fragment>
+              );
             } catch (error) {
               console.error('[OrdersTable] Error rendering order:', order.id, error);
               return (
@@ -208,17 +250,17 @@ export function OrdersTable({ orders, onUpdate, onEdit }: OrdersTableProps) {
                     <div className="grid grid-cols-2 gap-2 text-sm">
                       <div className="font-medium">Invoice Number:</div>
                       <div>{selectedOrder.invoices[0]?.invoiceNumber || "—"}</div>
-                      
+
                       <div className="font-medium">Invoice Date:</div>
                       <div>{formatDate(selectedOrder.invoices[0]?.invoiceDate)}</div>
-                      
+
                       <div className="font-medium">Order Ref:</div>
                       <div>{selectedOrder.refNumber}</div>
-                      
+
                       <div className="font-medium">Created:</div>
                       <div>{formatDate(selectedOrder.invoices[0]?.createdAt)}</div>
                     </div>
-                    
+
                     {selectedOrder.invoices?.[0]?.documents && Array.isArray(selectedOrder.invoices[0].documents) && selectedOrder.invoices[0].documents.length > 0 && (
                       <div className="pt-2 border-t">
                         <div className="font-medium text-sm mb-2">Documents ({selectedOrder.invoices[0].documents.length}):</div>

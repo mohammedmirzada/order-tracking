@@ -187,7 +187,7 @@ export default function OrdersClientPage() {
       </div>
 
       <div className={searching ? "opacity-60 transition-opacity" : "transition-opacity"}>
-        <OrdersTable orders={orders} onUpdate={fetchOrders} onEdit={handleEdit} />
+        <OrdersTable orders={orders} onUpdate={fetchOrders} onEdit={handleEdit} search={debouncedSearch} />
       </div>
 
       {meta.total > 0 && (
