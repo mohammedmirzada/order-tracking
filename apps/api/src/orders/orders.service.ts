@@ -96,7 +96,16 @@ export class OrdersService {
 
       return tx.order.findUnique({
         where: { id: order.id },
-        include: { supplier: true, forwarder: true, items: { orderBy: { createdAt: 'asc' } }, invoices: true },
+        include: {
+          supplier: true,
+          forwarder: true,
+          items: { orderBy: { createdAt: 'asc' } },
+          invoices: {
+            include: {
+              documents: { orderBy: { createdAt: 'desc' } },
+            },
+          },
+        },
       });
     });
   }
@@ -127,6 +136,16 @@ export class OrdersService {
           ...(dto.items?.length && {
             items: { create: dto.items.map(({ name, quantity, unitPrice }) => ({ name, quantity, unitPrice })) },
           }),
+        },
+        include: {
+          supplier: true,
+          forwarder: true,
+          items: { orderBy: { createdAt: 'asc' } },
+          invoices: {
+            include: {
+              documents: { orderBy: { createdAt: 'desc' } },
+            },
+          },
         },
       });
     });
