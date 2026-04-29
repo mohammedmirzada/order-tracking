@@ -73,6 +73,13 @@ pnpm --filter api dev
 pnpm --filter web dev
 ```
 
+
+Or run bot server together:
+```
+pnpm -r dev
+```
+
+
 - Web: http://localhost:3000
 - API: http://localhost:3001
 

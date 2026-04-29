@@ -95,8 +95,7 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <span className="text-xs text-muted-foreground">BUILD: 2026-01-18-01</span>
-        <Link 
+<Link 
           href="/dashboard/orders" 
           className="text-sm text-blue-600 hover:underline"
         >
