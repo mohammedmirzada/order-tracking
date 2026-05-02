@@ -101,6 +101,11 @@ Main entities: `User`, `Supplier`, `Forwarder`, `Order`, `Invoice`, `InvoiceDocu
 
 Documents are stored on disk in `apps/api/uploads/invoices` with UUID filenames and validated MIME types/size.
 
+## Production Environment Notes
+
+- `apps/api/.env` — `API_URL` must be `http://localhost:3001` (not the public domain). The Next.js BFF calls NestJS server-to-server on the same machine; using the public Cloudflare-proxied domain causes GET responses to be cached by Cloudflare, leading to stale data until re-login.
+- `apps/web/.env` — `NEXT_PUBLIC_API_URL` is unused by the codebase and can be omitted.
+
 ## Notes
 
 - For full commands, see commands.md.
